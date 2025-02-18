@@ -54,6 +54,7 @@ class CNNModel(nn.Module):
             self.linear = nn.Embedding(self.alphabet_size, embedding_dim=args.hidden_dim)
         else:
             expanded_simplex_input = args.cls_expanded_simplex or not classifier and (args.mode == 'dirichlet' or args.mode == 'riemannian')
+            #expanded_simplex_input = False
             inp_size = self.alphabet_size * (2 if expanded_simplex_input else 1)
             if (args.mode == 'ardm' or args.mode == 'lrar') and not classifier:
                 inp_size += 1 # plus one for the mask token of these models
@@ -88,8 +89,8 @@ class CNNModel(nn.Module):
         else:
             time_emb = F.relu(self.time_embedder(t))
             feat = seq.permute(0, 2, 1)
+            #feat = seq
             feat = F.relu(self.linear(feat))
-
         if self.args.cls_free_guidance and not self.classifier:
             cls_emb = self.cls_embedder(cls)
 
@@ -98,6 +99,7 @@ class CNNModel(nn.Module):
             if not self.args.clean_data:
                 h = h + self.time_layers[i](time_emb)[:, :, None]
             if self.args.cls_free_guidance and not self.classifier:
+                print('in cls free guidance')
                 h = h + self.cls_layers[i](cls_emb)[:, :, None]
             h = self.norms[i]((h).permute(0, 2, 1))
             h = F.relu(self.convs[i](h.permute(0, 2, 1)))
@@ -127,14 +129,15 @@ class TransformerModel(nn.Module):
             self.embedder = nn.Embedding(self.alphabet_size, args.hidden_dim)
         else:
             expanded_simplex_input = args.cls_expanded_simplex or not classifier and (args.mode == 'dirichlet' or args.mode == 'riemannian')
+            expanded_simplex_input = False
             self.embedder = nn.Linear((2 if expanded_simplex_input  else 1) *  self.alphabet_size,  args.hidden_dim)
             self.time_embedder = nn.Sequential(GaussianFourierProjection(embed_dim=args.hidden_dim), nn.Linear(args.hidden_dim, args.hidden_dim))
         self.transformer = nn.TransformerEncoder(nn.TransformerEncoderLayer(d_model=args.hidden_dim, nhead=4, dim_feedforward=args.hidden_dim, dropout=args.dropout), num_layers=args.num_layers, norm=nn.LayerNorm(args.hidden_dim))
 
         if self.classifier:
             self.cls_head = nn.Sequential(nn.Linear(args.hidden_dim, args.hidden_dim),
-                                   nn.ReLU(),
-                                   nn.Linear(args.hidden_dim, self.num_cls))
+                                          nn.ReLU(),
+                                          nn.Linear(args.hidden_dim, self.num_cls))
         else:
             self.out = nn.Linear(args.hidden_dim, self.alphabet_size)
 
@@ -154,7 +157,6 @@ class TransformerModel(nn.Module):
             return self.cls_head(feat)
         else:
             return self.out(feat)
-
 
 class DeepFlyBrainModel(nn.Module):
     def __init__(self, args, alphabet_size, num_cls, classifier=False):

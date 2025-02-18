@@ -3,12 +3,12 @@ from torch.utils.data import WeightedRandomSampler, Subset
 from lightning_modules.dna_module import DNAModule
 from utils.dataset import ToyDataset, TwoClassOverfitDataset, EnhancerDataset
 from utils.parsing import parse_train_args
-args = parse_train_args()
 import torch, os, wandb
 torch.manual_seed(0)
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+args = parse_train_args()
 if args.wandb:
     wandb.init(
         entity="anonymized",
@@ -20,7 +20,8 @@ if args.wandb:
 
 trainer = pl.Trainer(
     default_root_dir=os.environ["MODEL_DIR"],
-    accelerator="gpu" if torch.cuda.is_available() else 'auto',
+    #accelerator="gpu" if torch.cuda.is_available() else 'auto',
+    accelerator='cpu',
     max_steps=args.max_steps,
     max_epochs=args.max_epochs,
     num_sanity_val_steps=0,

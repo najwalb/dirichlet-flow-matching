@@ -59,7 +59,7 @@ def parse_train_args():
     parser.add_argument("--toy_num_cls", type=int, default=3)
     parser.add_argument("--toy_num_seq", type=int, default=1000)
     parser.add_argument("--toy_seq_len", type=int, default=20)
-    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--num_workers", type=int, default=0)
 
     # Guidance
     parser.add_argument("--cls_guidance", action='store_true')

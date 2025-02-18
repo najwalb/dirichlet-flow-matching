@@ -151,6 +151,7 @@ class DNAModule(GeneralModule):
         t_span = torch.linspace(1, args.alpha_max, self.args.num_integration_steps, device=self.device)
         for i, (s, t) in enumerate(zip(t_span[:-1], t_span[1:])):
             xt_expanded, prior_weights = expand_simplex(xt, s[None].expand(B), args.prior_pseudocount)
+            #xt_expanded = xt
             if args.cls_free_guidance:
                 logits = model(xt_expanded, t=s[None].expand(B), cls=cls if self.args.all_class_inference else (torch.ones(B, device=self.device) * args.target_class).long())
                 probs_cond = torch.nn.functional.softmax(logits / args.flow_temp, -1)  # [B, L, K]
