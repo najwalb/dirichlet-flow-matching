@@ -21,9 +21,7 @@ from utils.flow_utils import DirichletConditionalFlow, expand_simplex, sample_co
 from lightning_modules.general_module import GeneralModule
 from utils.logging import get_logger
 
-
 logger = get_logger(__name__)
-
 
 class DNAModule(GeneralModule):
     def __init__(self, args, alphabet_size, num_cls, toy_data):
@@ -43,7 +41,6 @@ class DNAModule(GeneralModule):
         self.mean_log_ema = {}
         if self.args.taskiran_seq_path is not None:
             self.taskiran_fly_seqs = load_flybrain_designed_seqs(self.args.taskiran_seq_path).to(self.device)
-
 
     def on_load_checkpoint(self, checkpoint):
         checkpoint['state_dict'] = {k: v for k,v in checkpoint['state_dict'].items() if 'cls_model' not in k and 'distill_model' not in k}
@@ -66,7 +63,6 @@ class DNAModule(GeneralModule):
         self.iter_step += 1
         seq, cls = batch
         B, L = seq.shape
-
         xt, alphas = sample_cond_prob_path(self.args, seq, self.model.alphabet_size)
         if self.args.mode == 'distill':
             if self.stage == 'val':
@@ -89,10 +85,10 @@ class DNAModule(GeneralModule):
         else:
             cls_inp = None
         logits = self.model(xt_inp, t=alphas, cls=cls_inp)
-
-        losses = torch.nn.functional.cross_entropy(logits.transpose(1, 2), seq_distill if self.args.mode == 'distill' else seq, reduction='none')
+        losses = torch.nn.functional.cross_entropy(logits.transpose(1, 2),
+                                                   seq_distill if self.args.mode == 'distill' else seq,
+                                                   reduction='none')
         losses = losses.mean(-1)
-
         self.lg('loss', losses)
         self.lg('perplexity', torch.exp(losses.mean())[None].expand(B))
         if self.stage == "val":
@@ -114,7 +110,6 @@ class DNAModule(GeneralModule):
             self.lg('recovery', seq_pred.eq(seq).float().mean(-1))
             if self.args.dataset_type == 'toy_fixed':
                 self.log_data_similarities(seq_pred)
-
             self.val_outputs['seqs'].append(seq_pred.cpu())
             if self.args.cls_ckpt is not None:
                 #self.run_cls_model(seq_pred, cls, log_dict=self.val_outputs, clean_data=False, postfix='_noisycls_generated', generated=True)
@@ -201,18 +196,16 @@ class DNAModule(GeneralModule):
             if not (flow_probs >= 0).all(): print(f'flow_probs.min(): {flow_probs.min()}')
             cond_flows = (eye - xt.unsqueeze(-1)) * c_factor.unsqueeze(-2)
             flow = (flow_probs.unsqueeze(-2) * cond_flows).sum(-1)
-
-
+            
             if self.args.vectorfield_addition:
                 flow_cond = (probs_cond.unsqueeze(-2) * cond_flows).sum(-1)
                 flow_uncond = (probs_unccond.unsqueeze(-2) * cond_flows).sum(-1)
                 flow = flow_cond * self.args.guidance_scale + (1 - self.args.guidance_scale) * flow_uncond
-
             xt = xt + flow * (t - s)
-
             if not torch.allclose(xt.sum(2), torch.ones((B, L), device=self.device), atol=1e-4) or not (xt >= 0).all():
                 print(f'WARNING: xt.min(): {xt.min()}. Some values of xt do not lie on the simplex. There are we are {(xt<0).sum()} negative values in xt of shape {xt.shape} that are negative. We are projecting them onto the simplex.')
                 xt = simplex_proj(xt)
+                
         return logits, x0
 
     @torch.no_grad()
@@ -249,8 +242,7 @@ class DNAModule(GeneralModule):
         B, L, K = xt.shape
         probs = torch.nn.functional.softmax(logits, dim=-1)
         probs_cond = torch.nn.functional.softmax(logits_cond, dim=-1)
-
-
+        
         cond_scores_mats = ((alpha - 1) * (torch.eye(self.model.alphabet_size).to(xt)[None, :] / xt[..., None]))  # [B, L, K, K]
 
         cond_scores_mats = cond_scores_mats - cond_scores_mats.mean(2)[:, :, None, :]  # [B, L, K, K] now the columns sum up to 0
@@ -264,6 +256,7 @@ class DNAModule(GeneralModule):
         score_guided_ = score_guided.clone()  # [B, L, K]
         score_guided_[:, :, -1] = torch.ones(B, L)  # [B, L, K]
         flow_guided = torch.linalg.solve(Q_mats, score_guided_)  # [B, L, K]
+        
         return flow_guided
 
     def get_cls_guided_flow(self, xt, alpha, p_x0_given_xt):
@@ -302,6 +295,7 @@ class DNAModule(GeneralModule):
             print("Warning: there were this many nans in the probs_cond of the classifier score: ", torch.isnan(p_x0_given_xt_y).sum(), "We are setting them to 0.")
             p_x0_given_xt_y = torch.nan_to_num(p_x0_given_xt_y)
         return p_x0_given_xt_y, cls_score
+    
     def get_cls_score(self, xt, alpha):
         with torch.enable_grad():
             xt_ = xt.clone().detach().requires_grad_(True)
@@ -442,8 +436,6 @@ class DNAModule(GeneralModule):
                 del self._log[key]
         self.val_outputs = defaultdict(list)
 
-
-
     def on_train_epoch_start(self) -> None:
         self.inf_counter = 1
         self.nan_inf_counter = 0
@@ -516,7 +508,6 @@ class DNAModule(GeneralModule):
             self.model = DeepFlyBrainModel(self.args, alphabet_size=alphabet_size,num_cls=num_cls)
         else:
             raise NotImplementedError()
-
 
     def load_classifiers(self, load_cls, load_clean_cls, requires_grad = False):
         if load_cls:

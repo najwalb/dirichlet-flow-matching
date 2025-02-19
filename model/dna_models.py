@@ -11,8 +11,6 @@ class MLPModel(nn.Module):
         self.alphabet_size = alphabet_size
         self.classifier = classifier
         self.num_cls = num_cls
-
-
         self.time_embedder = nn.Sequential(GaussianFourierProjection(embed_dim= args.hidden_dim),nn.Linear(args.hidden_dim, args.hidden_dim))
         self.embedder = nn.Linear((1 if classifier and not args.cls_expanded_simplex else 2) * self.alphabet_size,  args.hidden_dim)
         self.mlp = nn.Sequential(
@@ -60,7 +58,6 @@ class CNNModel(nn.Module):
                 inp_size += 1 # plus one for the mask token of these models
             self.linear = nn.Conv1d(inp_size, args.hidden_dim, kernel_size=9, padding=4)
             self.time_embedder = nn.Sequential(GaussianFourierProjection(embed_dim= args.hidden_dim),nn.Linear(args.hidden_dim, args.hidden_dim))
-
         self.num_layers = 5 * args.num_cnn_stacks
         self.convs = [nn.Conv1d(args.hidden_dim, args.hidden_dim, kernel_size=9, padding=4),
                                      nn.Conv1d(args.hidden_dim, args.hidden_dim, kernel_size=9, padding=4),
@@ -82,6 +79,7 @@ class CNNModel(nn.Module):
         if self.args.cls_free_guidance and not self.classifier:
             self.cls_embedder = nn.Embedding(num_embeddings=self.num_cls + 1, embedding_dim=args.hidden_dim)
             self.cls_layers = nn.ModuleList([Dense(args.hidden_dim, args.hidden_dim) for _ in range(self.num_layers)])
+            
     def forward(self, seq, t, cls = None, return_embedding=False):
         if self.args.clean_data:
             feat = self.linear(seq)

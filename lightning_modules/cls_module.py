@@ -118,7 +118,6 @@ class CLSModule(GeneralModule):
             logger.info(str(mean_log))
             self.log_dict(mean_log, batch_size=1)
             if self.args.wandb:
-
                 wandb.log({'fig': [wandb.Image(pil_auroc_aupr), wandb.Image(pil_auroc_acc), wandb.Image(pil_acc_aupr)], 'step': self.trainer.global_step,'iter_step': self.iter_step})
                 if not self.args.clean_data:
                     pil_img, pil_img2 = self.plot_probs_per_alpha()
@@ -142,7 +141,6 @@ class CLSModule(GeneralModule):
         pil_auroc_acc = create_scatter_plot(x=aurocs, y=accuracies, title=title, x_label='auROC', y_label='accuracy')
         pil_acc_aupr = create_scatter_plot(x=accuracies, y=auprs, title=title, x_label='accuracy', y_label='auPR')
         return pil_auroc_aupr, pil_auroc_acc, pil_acc_aupr, aurocs, accuracies, auprs
-
 
     def lg(self, key, data):
         if isinstance(data, torch.Tensor):

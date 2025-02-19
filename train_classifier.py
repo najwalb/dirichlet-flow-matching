@@ -20,7 +20,7 @@ if args.wandb:
 
 trainer = pl.Trainer(
     default_root_dir=os.environ["MODEL_DIR"],
-    accelerator="gpu" if torch.cuda.is_available() else 'auto',
+    accelerator="gpu" if torch.cuda.is_available() else 'cpu',
     max_steps=args.max_steps,
     num_sanity_val_steps=0,
     limit_train_batches=args.limit_train_batches,
