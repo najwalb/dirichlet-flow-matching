@@ -73,7 +73,7 @@ class DNAModule(GeneralModule):
             alphas = alphas * 0
         xt_inp = xt
         if self.args.mode == 'dirichlet' or self.args.mode == 'riemannian':
-            xt_inp, prior_weights = expand_simplex(xt,alphas, self.args.prior_pseudocount)
+            xt_inp, prior_weights = expand_simplex(xt, alphas, self.args.prior_pseudocount)
             self.lg('prior_weight', prior_weights)
 
         if self.args.cls_free_guidance:
@@ -529,7 +529,7 @@ class DNAModule(GeneralModule):
             for param in self.cls_model.parameters():
                 param.requires_grad = requires_grad
 
-        if  load_clean_cls:
+        if load_clean_cls:
             with open(self.args.clean_cls_ckpt_hparams) as f:
                 hparams = yaml.load(f, Loader=yaml.UnsafeLoader)
             if self.args.clean_cls_model == 'cnn':
