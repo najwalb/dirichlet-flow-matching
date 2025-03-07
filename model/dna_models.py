@@ -87,18 +87,17 @@ class CNNModel(nn.Module):
         else:
             time_emb = F.relu(self.time_embedder(t))
             feat = seq.permute(0, 2, 1)
-            #feat = seq
             feat = F.relu(self.linear(feat))
+            
         if self.args.cls_free_guidance and not self.classifier:
             cls_emb = self.cls_embedder(cls)
-
+            
         for i in range(self.num_layers):
             h = self.dropout(feat.clone())
             if not self.args.clean_data:
-                h = h + self.time_layers[i](time_emb)[:, :, None]
+                h = h + self.time_layers[i](time_emb)[:,:,None]
             if self.args.cls_free_guidance and not self.classifier:
-                print('in cls free guidance')
-                h = h + self.cls_layers[i](cls_emb)[:, :, None]
+                h = h + self.cls_layers[i](cls_emb)[:,:,None]
             h = self.norms[i]((h).permute(0, 2, 1))
             h = F.relu(self.convs[i](h.permute(0, 2, 1)))
             if h.shape == feat.shape:

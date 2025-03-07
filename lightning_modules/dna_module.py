@@ -1,7 +1,6 @@
 import copy
 import math
 from collections import defaultdict
-
 import PIL
 import numpy as np
 import pandas as pd
@@ -9,11 +8,9 @@ import torch, time, os
 import wandb
 import seaborn as sns
 import yaml
-
 sns.set_style('whitegrid')
 from matplotlib import pyplot as plt
 from torch import optim
-
 from model.dna_models import MLPModel, CNNModel, TransformerModel, DeepFlyBrainModel
 from utils.esm import upgrade_state_dict
 from utils.flow_utils import DirichletConditionalFlow, expand_simplex, sample_cond_prob_path, simplex_proj, \
